@@ -1,42 +1,49 @@
-import { prisma } from '../src/lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 async function main() {
-  const householdId = '22222222-2222-2222-2222-222222222222';
-  const userId = '11111111-1111-1111-1111-111111111111';
+  console.log("Iniciando o Seed do Supabase...");
 
-  // Create Household
-  const household = await prisma.household.upsert({
+  const householdId = "22222222-2222-2222-2222-222222222222";
+  const userId = "11111111-1111-1111-1111-111111111111";
+
+  // Upsert Household
+  const house = await prisma.household.upsert({
     where: { id: householdId },
     update: {},
     create: {
       id: householdId,
-      name: 'Minha Casa',
+      name: "Minha Casa",
     },
   });
 
-  // Create User
+  console.log("Casa garantida:", house.name);
+
+  // Upsert User
   const user = await prisma.user.upsert({
-    where: { email: 'admin@kaza.com' },
+    where: { id: userId },
     update: {},
     create: {
       id: userId,
-      email: 'admin@kaza.com',
-      name: 'Admin',
-      password: 'password', // in a real app this would be hashed
-      householdId: household.id,
+      name: "Pedro",
+      email: "pedro@kaza.com",
+      password: "123", // Fake password because login is mocked
+      householdId: house.id,
       contributionPercentage: 50,
     },
   });
 
-  console.log({ household, user });
+  console.log("Usuário garantido:", user.name);
+
+  console.log("Seed finalizado com sucesso!");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
   })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
+  .finally(async () => {
+    await prisma.$disconnect();
   });

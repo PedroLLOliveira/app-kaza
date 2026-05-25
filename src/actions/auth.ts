@@ -3,6 +3,8 @@
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 const secretKey = new TextEncoder().encode(
   process.env.JWT_SECRET || "fallback-secret-key-for-dev"
@@ -12,29 +14,103 @@ export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  // Mock validation for Phase 2
   if (!email || !password) {
-    throw new Error("Email e senha são obrigatórios");
+    redirect("/login?error=missing_fields");
   }
 
-  // Set the default user IDs from our seed for testing CRUD operations
-  const userId = "11111111-1111-1111-1111-111111111111";
-  const householdId = "22222222-2222-2222-2222-222222222222";
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
-  // Generate a mock JWT token
-  const token = await new SignJWT({ email, userId, householdId, role: "user" })
+  if (!user) {
+    redirect("/login?error=invalid_credentials");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    redirect("/login?error=invalid_credentials");
+  }
+
+  const token = await new SignJWT({ 
+    email: user.email, 
+    userId: user.id, 
+    householdId: user.householdId, 
+    role: "user" 
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(secretKey);
 
-  // Set the cookie
   const cookieStore = await cookies();
   cookieStore.set("auth_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    maxAge: 60 * 60 * 24 * 7,
+    path: "/",
+  });
+
+  redirect("/dashboard/house");
+}
+
+export async function registerAction(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!name || !email || !password) {
+    redirect("/register?error=missing_fields");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser) {
+    redirect("/register?error=email_in_use");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Cria a Casa "My House" e o Usuário de uma vez só usando o Prisma
+  const house = await prisma.household.create({
+    data: {
+      name: "My House",
+      users: {
+        create: {
+          name,
+          email,
+          password: hashedPassword,
+          contributionPercentage: 50, // Padrão
+        }
+      }
+    },
+    include: {
+      users: true
+    }
+  });
+
+  const newUser = house.users[0];
+
+  const token = await new SignJWT({ 
+    email: newUser.email, 
+    userId: newUser.id, 
+    householdId: newUser.householdId, 
+    role: "user" 
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secretKey);
+
+  const cookieStore = await cookies();
+  cookieStore.set("auth_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
     path: "/",
   });
 
