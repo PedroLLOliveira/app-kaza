@@ -1,0 +1,122 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Household {
+  id                 String             @id @default(uuid())
+  name               String
+  users              User[]
+  bills              Bill[]
+  reserves           Reserve[]
+  sharedInvestments  SharedInvestment[]
+  transactions       Transaction[]
+}
+
+model User {
+  id                     String        @id @default(uuid())
+  name                   String
+  email                  String        @unique
+  password               String
+  householdId            String
+  household              Household     @relation(fields: [householdId], references: [id])
+  contributionPercentage Float         @default(0)
+  bankAccounts           BankAccount[]
+  incomes                Income[]
+  individualBills        Bill[]        @relation("UserIndividualBills")
+  transactions           Transaction[] @relation("UserTransactions")
+  individualReserves     Reserve[]     @relation("UserIndividualReserves")
+  creditCards            CreditCard[]
+}
+
+model BankAccount {
+  id           String        @id @default(uuid())
+  name         String
+  balance      Float         @default(0)
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Income {
+  id           String  @id @default(uuid())
+  name         String
+  amount       Float
+  type         String
+  isSharedPool Boolean @default(false)
+  userId       String
+  user         User    @relation(fields: [userId], references: [id])
+}
+
+model Bill {
+  id          String     @id @default(uuid())
+  title       String
+  amount      Float
+  type        String
+  scope       String
+  dueDate     DateTime
+  isPaid      Boolean    @default(false)
+  paymentSource String   @default("SALARY")
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id])
+  userId      String?
+  user        User?      @relation("UserIndividualBills", fields: [userId], references: [id])
+}
+
+model Reserve {
+  id            String     @id @default(uuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float      @default(0)
+  scope         String
+  householdId   String?
+  household     Household? @relation(fields: [householdId], references: [id])
+  userId        String?
+  user          User?      @relation("UserIndividualReserves", fields: [userId], references: [id])
+}
+
+model Transaction {
+  id            String      @id @default(uuid())
+  title         String
+  amount        Float
+  type          String
+  date          DateTime    @default(now())
+  scope         String
+  bankAccountId String
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+  householdId   String?
+  household     Household?  @relation(fields: [householdId], references: [id])
+  userId        String?
+  user          User?       @relation("UserTransactions", fields: [userId], references: [id])
+}
+
+model SharedInvestment {
+  id          String    @id @default(uuid())
+  name        String
+  amount      Float
+  description String?
+  date        DateTime  @default(now())
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id])
+}
+
+model CreditCard {
+  id           String              @id @default(uuid())
+  name         String
+  limit        Float               @default(0)
+  userId       String
+  user         User                @relation(fields: [userId], references: [id])
+  invoices     CreditCardInvoice[]
+}
+
+model CreditCardInvoice {
+  id           String      @id @default(uuid())
+  dueDate      DateTime
+  amount       Float
+  isPaid       Boolean     @default(false)
+  creditCardId String
+  creditCard   CreditCard  @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+}
