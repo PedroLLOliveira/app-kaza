@@ -54,28 +54,28 @@ export default async function SettingsPage() {
 
           <form action={updateContributionPercentage} className="space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2">
                 <label htmlFor="contributionPercentage" className="font-medium">
-                  Contribuir com:
+                  Sua parte nas despesas da casa (%)
                 </label>
-                <span className="text-2xl font-bold text-primary">
-                  {user.contributionPercentage}%
-                </span>
-              </div>
-              <input
-                type="range"
-                id="contributionPercentage"
-                name="contributionPercentage"
-                min="0"
-                max="100"
-                step="5"
-                defaultValue={user.contributionPercentage}
-                className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>0% (Nada)</span>
-                <span>50% (Metade)</span>
-                <span>100% (Tudo)</span>
+                <div className="relative w-full sm:w-1/3">
+                  <input
+                    type="number"
+                    id="contributionPercentage"
+                    name="contributionPercentage"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    defaultValue={user.contributionPercentage}
+                    className="w-full pl-4 pr-12 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none font-bold text-xl text-primary"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-muted-foreground font-bold text-lg">
+                    %
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Você pode usar números quebrados. Ex: 33.33, 45.5, 100.
+                </p>
               </div>
             </div>
 
