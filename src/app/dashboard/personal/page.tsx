@@ -8,6 +8,7 @@ import { OverviewChart } from "@/components/ui/Charts";
 import { PlusCircle, DollarSign, PiggyBank, Briefcase, Receipt, CheckCircle, Circle, AlertCircle, PieChart as PieChartIcon, Pencil, Trash2, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function PersonalPage({
   searchParams,
@@ -82,6 +83,7 @@ export default async function PersonalPage({
       case "SALARY": return <Briefcase className="w-6 h-6" />;
       case "INVESTMENT": return <PiggyBank className="w-6 h-6" />;
       case "BENEFIT": return <DollarSign className="w-6 h-6" />;
+      case "FOOD_VOUCHER": return <Receipt className="w-6 h-6" />;
       default: return <DollarSign className="w-6 h-6" />;
     }
   };
@@ -90,7 +92,8 @@ export default async function PersonalPage({
     switch (type) {
       case "SALARY": return "Salário";
       case "INVESTMENT": return "Investimento";
-      case "BENEFIT": return "Benefício / Vale";
+      case "BENEFIT": return "Outro Benefício";
+      case "FOOD_VOUCHER": return "Vale Alimentação";
       default: return "Outro";
     }
   };
@@ -190,7 +193,7 @@ export default async function PersonalPage({
                 <div key={bill.id} className={`glass-panel p-4 rounded-2xl flex items-center justify-between transition-colors relative group ${bill.isPaid ? 'opacity-60 bg-muted/20' : ''}`}>
                   
                   {/* Hover Actions */}
-                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <Link href={`/dashboard/personal?editBill=${bill.id}`} className="p-1.5 bg-background/80 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors">
                       <Pencil className="w-3 h-3" />
                     </Link>
@@ -286,7 +289,7 @@ export default async function PersonalPage({
                   )}
 
                   {/* Hover Actions */}
-                  <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                     <Link href={`/dashboard/personal?editIncome=${inc.id}`} className="p-1.5 bg-background/80 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors">
                       <Pencil className="w-3 h-3" />
                     </Link>
@@ -379,12 +382,12 @@ export default async function PersonalPage({
               </label>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Renda
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -450,12 +453,12 @@ export default async function PersonalPage({
               </label>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Alterações
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -530,12 +533,12 @@ export default async function PersonalPage({
               </select>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Lançando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Lançar Conta Pessoal
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -611,12 +614,12 @@ export default async function PersonalPage({
               </select>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Alterações
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { OverviewChart } from "@/components/ui/Charts";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function HousePage({
   searchParams,
@@ -131,7 +132,7 @@ export default async function HousePage({
               <div key={bill.id} className={`glass-panel p-4 rounded-2xl flex items-center justify-between transition-colors relative group ${bill.isPaid ? 'opacity-60 bg-muted/20' : ''}`}>
                 
                 {/* Hover Actions */}
-                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <Link href={`/dashboard/house?edit=${bill.id}`} className="p-1.5 bg-background/80 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors">
                     <Pencil className="w-3 h-3" />
                   </Link>
@@ -236,12 +237,12 @@ export default async function HousePage({
               </select>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Lançando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Lançar Conta
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -317,12 +318,12 @@ export default async function HousePage({
               </select>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Alterações
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}

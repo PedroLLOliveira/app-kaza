@@ -1,6 +1,7 @@
 import { getBankAccounts, createBankAccount, updateBankAccount, deleteBankAccount } from "@/actions/accounts";
 import { getCreditCards, createCreditCardWithInvoices, payCreditCardInvoice, deleteCreditCard, createSingleCreditCardInvoice, updateCreditCardInvoice, deleteCreditCardInvoice } from "@/actions/creditCards";
 import { Modal } from "@/components/ui/Modal";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { PlusCircle, Wallet, Pencil, Trash2, CreditCard as CreditCardIcon, CheckCircle, Circle, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -114,7 +115,7 @@ export default async function AccountsPage({
               <div key={acc.id} className="glass-panel p-6 rounded-2xl relative group hover:-translate-y-1 transition-transform cursor-default">
                 
                 {/* Action Buttons Overlay */}
-                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <Link href={`/dashboard/accounts?edit=${acc.id}`} className="p-2 bg-background/80 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors backdrop-blur-sm">
                     <Pencil className="w-4 h-4" />
                   </Link>
@@ -152,10 +153,10 @@ export default async function AccountsPage({
           </h2>
           <Link
             href="/dashboard/accounts?newCard=true"
-            className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/90 transition-all hover:scale-105 active:scale-95 shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/90 transition-all hover:scale-105 active:scale-95 shadow-md whitespace-nowrap"
           >
             <PlusCircle className="w-5 h-5" />
-            <span className="hidden sm:inline">Novo Cartão</span>
+            <span>Novo Cartão</span>
           </Link>
         </div>
 
@@ -170,7 +171,7 @@ export default async function AccountsPage({
               <div key={card.id} className="glass-panel rounded-3xl overflow-hidden flex flex-col">
                 {/* Header do Cartão */}
                 <div className="p-6 bg-gradient-to-br from-primary/10 to-transparent relative group">
-                  <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <form action={handleDeleteCard.bind(null, card.id)}>
                       <button type="submit" className="p-2 bg-background/80 hover:bg-destructive/20 rounded-full text-muted-foreground hover:text-destructive transition-colors backdrop-blur-sm">
                         <Trash2 className="w-4 h-4" />
@@ -200,7 +201,7 @@ export default async function AccountsPage({
                         <div key={invoice.id} className={`flex items-center justify-between p-3 rounded-xl border border-border/50 transition-colors relative group ${invoice.isPaid ? 'bg-muted/30 opacity-70' : 'bg-background hover:border-primary/50'}`}>
                           
                           {/* Botões de Ação na Fatura (Hover) */}
-                          <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-full shadow-sm border border-border">
+                          <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-full shadow-sm border border-border">
                             <Link href={`/dashboard/accounts?editInvoice=${invoice.id}`} className="p-1.5 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors">
                               <Pencil className="w-3 h-3" />
                             </Link>
@@ -265,12 +266,12 @@ export default async function AccountsPage({
                 className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
               />
             </div>
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Adicionar Conta
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -301,12 +302,12 @@ export default async function AccountsPage({
                 className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
               />
             </div>
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Alterações
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -388,12 +389,12 @@ export default async function AccountsPage({
               O Kaza gerará N faturas futuras no valor inserido. Você poderá editar o valor de cada fatura posteriormente.
             </p>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Lançando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Criar Cartão e Faturas
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -428,12 +429,12 @@ export default async function AccountsPage({
               </div>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Lançando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Adicionar Fatura
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}
@@ -469,12 +470,12 @@ export default async function AccountsPage({
               </div>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Salvando..."
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Salvar Fatura
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       )}

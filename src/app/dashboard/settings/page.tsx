@@ -1,6 +1,7 @@
 import { getUserSettings, updateContributionPercentage } from "@/actions/user";
 import { User, Percent, LogOut, Settings } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function SettingsPage() {
   const user = await getUserSettings();
@@ -78,12 +79,12 @@ export default async function SettingsPage() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-8 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
+            <SubmitButton
+              loadingText="Salvando..."
+              className="w-full sm:w-auto px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
-              Salvar Alterações
-            </button>
+              Salvar Alteração
+            </SubmitButton>
           </form>
         </section>
 
@@ -92,13 +93,13 @@ export default async function SettingsPage() {
         {/* Logout Section */}
         <section>
           <form action={logoutAction}>
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors font-medium border border-transparent hover:border-destructive/20"
+            <SubmitButton
+              loadingText="Saindo..."
+              className="w-full flex items-center justify-center gap-2 py-3 bg-destructive text-destructive-foreground rounded-xl font-medium hover:bg-destructive/90 transition-all hover:shadow-lg hover:shadow-destructive/25"
             >
               <LogOut className="w-5 h-5" />
-              Sair da Conta
-            </button>
+              Sair da minha conta
+            </SubmitButton>
           </form>
         </section>
       </div>

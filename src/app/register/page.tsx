@@ -1,6 +1,7 @@
 import { registerAction } from "@/actions/auth";
 import { Wallet, ArrowRight, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function RegisterPage({
   searchParams,
@@ -98,13 +99,13 @@ export default async function RegisterPage({
               </div>
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
+              loadingText="Criando conta..."
               className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
             >
               Criar minha conta
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </SubmitButton>
           </form>
 
           <div className="text-center text-sm text-muted-foreground">
