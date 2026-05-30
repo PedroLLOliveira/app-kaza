@@ -132,7 +132,7 @@ export function MonthlyBarChart({ data }: { data: { id: string, label: string, v
             dataKey="label" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
+            tick={{ fill: "#ffffff", fontSize: 12 }} 
             dy={10} 
           />
           <YAxis 
