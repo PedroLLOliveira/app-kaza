@@ -12,6 +12,8 @@ export async function createIncome(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const type = formData.get("type") as string;
   const isSharedPool = formData.get("isSharedPool") === "true";
+  const debtorName = formData.get("debtorName") as string | null;
+  const destination = formData.get("destination") as string | null;
 
   if (!name || isNaN(amount) || !type) throw new Error("Preencha todos os campos corretamente");
 
@@ -21,6 +23,8 @@ export async function createIncome(formData: FormData) {
       amount,
       type,
       isSharedPool,
+      debtorName: type === "LOAN" ? debtorName : null,
+      destination: type === "LOAN" ? destination : null,
       userId: session.userId,
     },
   });
@@ -46,6 +50,8 @@ export async function updateIncome(id: string, formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const type = formData.get("type") as string;
   const isSharedPool = formData.get("isSharedPool") === "true";
+  const debtorName = formData.get("debtorName") as string | null;
+  const destination = formData.get("destination") as string | null;
 
   if (!name || isNaN(amount) || !type) {
     throw new Error("Preencha todos os campos corretamente");
@@ -59,7 +65,14 @@ export async function updateIncome(id: string, formData: FormData) {
 
   await prisma.income.update({
     where: { id },
-    data: { name, amount, type, isSharedPool },
+    data: { 
+      name, 
+      amount, 
+      type, 
+      isSharedPool,
+      debtorName: type === "LOAN" ? debtorName : null,
+      destination: type === "LOAN" ? destination : null,
+    },
   });
 
   revalidatePath("/dashboard/personal");

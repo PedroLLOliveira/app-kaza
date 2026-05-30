@@ -136,3 +136,46 @@ export async function getPersonalBreakdown(userId: string) {
     foodVoucherBalance
   };
 }
+
+export async function getPersonalMonthlyExpenses(userId: string) {
+  const bills = await prisma.bill.findMany({
+    where: { scope: "INDIVIDUAL", userId },
+    select: { amount: true, dueDate: true }
+  });
+
+  const invoices = await prisma.creditCardInvoice.findMany({
+    where: { creditCard: { userId } },
+    select: { amount: true, dueDate: true }
+  });
+
+  const monthlyData: Record<string, number> = {};
+
+  const processItem = (item: { amount: number, dueDate: Date }) => {
+    // Format YYYY-MM for sorting
+    const year = item.dueDate.getFullYear();
+    const month = (item.dueDate.getMonth() + 1).toString().padStart(2, '0');
+    const key = `${year}-${month}`;
+    
+    if (!monthlyData[key]) {
+      monthlyData[key] = 0;
+    }
+    monthlyData[key] += item.amount;
+  };
+
+  bills.forEach(processItem);
+  invoices.forEach(processItem);
+
+  const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+  const sortedKeys = Object.keys(monthlyData).sort();
+
+  return sortedKeys.map(key => {
+    const [year, month] = key.split("-");
+    const monthName = monthNames[parseInt(month) - 1];
+    return {
+      id: key,
+      label: `${monthName} ${year.slice(-2)}`,
+      value: monthlyData[key]
+    };
+  });
+}

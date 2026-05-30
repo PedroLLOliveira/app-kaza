@@ -1,14 +1,15 @@
 import { getIncomes, createIncome, updateIncome, deleteIncome } from "@/actions/incomes";
 import { getPersonalBills, createBill, toggleBillStatus, updateBill, deleteBill } from "@/actions/bills";
 import { getCurrentMonthInvoices, payCreditCardInvoice } from "@/actions/creditCards";
-import { getPersonalBreakdown } from "@/services/calculations";
+import { getPersonalBreakdown, getPersonalMonthlyExpenses } from "@/services/calculations";
 import { getSession } from "@/actions/auth";
 import { Modal } from "@/components/ui/Modal";
-import { OverviewChart } from "@/components/ui/Charts";
-import { PlusCircle, DollarSign, PiggyBank, Briefcase, Receipt, CheckCircle, Circle, AlertCircle, PieChart as PieChartIcon, Pencil, Trash2, CreditCard } from "lucide-react";
+import { OverviewChart, MonthlyBarChart } from "@/components/ui/Charts";
+import { PlusCircle, DollarSign, PiggyBank, Briefcase, Receipt, CheckCircle, Circle, AlertCircle, PieChart as PieChartIcon, Pencil, Trash2, CreditCard, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { IncomeForm } from "@/components/forms/IncomeForm";
 
 export default async function PersonalPage({
   searchParams,
@@ -20,6 +21,7 @@ export default async function PersonalPage({
   const incomes = await getIncomes();
   const bills = await getPersonalBills();
   const currentInvoices = await getCurrentMonthInvoices();
+  const monthlyExpenses = session ? await getPersonalMonthlyExpenses(session.userId) : [];
   
   const showNewIncomeModal = resolvedSearchParams.newIncome === "true";
   const showNewBillModal = resolvedSearchParams.newBill === "true";
@@ -84,6 +86,7 @@ export default async function PersonalPage({
       case "INVESTMENT": return <PiggyBank className="w-6 h-6" />;
       case "BENEFIT": return <DollarSign className="w-6 h-6" />;
       case "FOOD_VOUCHER": return <Receipt className="w-6 h-6" />;
+      case "LOAN": return <DollarSign className="w-6 h-6" />;
       default: return <DollarSign className="w-6 h-6" />;
     }
   };
@@ -94,6 +97,7 @@ export default async function PersonalPage({
       case "INVESTMENT": return "Investimento";
       case "BENEFIT": return "Outro Benefício";
       case "FOOD_VOUCHER": return "Vale Alimentação";
+      case "LOAN": return "Dinheiro Emprestado (Agiota)";
       default: return "Outro";
     }
   };
@@ -174,6 +178,14 @@ export default async function PersonalPage({
             foodVoucherBalance={breakdown.foodVoucherBalance}
           />
         </div>
+      </div>
+
+      <div className="glass-panel p-6 rounded-3xl mb-8 relative">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Projeção Mensal de Despesas</h2>
+        </div>
+        <MonthlyBarChart data={monthlyExpenses} />
       </div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -307,6 +319,11 @@ export default async function PersonalPage({
                     <div className="pr-16">
                       <h3 className="font-medium text-sm">{inc.name}</h3>
                       <p className="text-xs text-muted-foreground">{getTypeLabel(inc.type)}</p>
+                      {inc.type === "LOAN" && (
+                        <p className="text-[10px] text-primary/80 mt-0.5">
+                          Devendo: {inc.debtorName} • {inc.destination === "CREDIT_CARD" ? "Para Cartões" : "Livre"}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <p className="font-bold text-sm">
@@ -326,68 +343,10 @@ export default async function PersonalPage({
       {showNewIncomeModal && (
         <Modal title="Nova Renda" closeHref="/dashboard/personal">
           <form action={handleCreateIncome} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">Descrição da Renda</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                placeholder="Ex: Salário da Empresa X"
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="amount" className="text-sm font-medium">Valor Mensal</label>
-              <input
-                id="amount"
-                name="amount"
-                type="number"
-                step="0.01"
-                required
-                placeholder="0.00"
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium">Tipo de Renda</label>
-              <select
-                id="type"
-                name="type"
-                required
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="SALARY">Salário</option>
-                <option value="FOOD_VOUCHER">Vale Alimentação / Refeição</option>
-                <option value="BENEFIT">Outro Benefício</option>
-                <option value="INVESTMENT">Investimento / Rendimento</option>
-                <option value="OTHER">Outros</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl border border-border">
-              <input
-                type="checkbox"
-                id="isSharedPool"
-                name="isSharedPool"
-                value="true"
-                defaultChecked
-                className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-              />
-              <label htmlFor="isSharedPool" className="text-sm cursor-pointer select-none">
-                <span className="font-medium block">Entra para divisão das contas?</span>
-                <span className="text-muted-foreground text-xs">Desmarque se for uma renda exclusiva sua.</span>
-              </label>
-            </div>
-
-            <SubmitButton
-              loadingText="Salvando..."
-              className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
-            >
-              Salvar Renda
-            </SubmitButton>
+            <IncomeForm 
+              actionLabel="Salvar Renda"
+              loadingLabel="Salvando..."
+            />
           </form>
         </Modal>
       )}
@@ -396,69 +355,11 @@ export default async function PersonalPage({
       {incomeToEdit && (
         <Modal title="Editar Renda" closeHref="/dashboard/personal">
           <form action={handleUpdateIncome.bind(null, incomeToEdit.id)} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="edit-name" className="text-sm font-medium">Descrição da Renda</label>
-              <input
-                id="edit-name"
-                name="name"
-                type="text"
-                required
-                defaultValue={incomeToEdit.name}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="edit-amount" className="text-sm font-medium">Valor Mensal</label>
-              <input
-                id="edit-amount"
-                name="amount"
-                type="number"
-                step="0.01"
-                required
-                defaultValue={incomeToEdit.amount}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="edit-type" className="text-sm font-medium">Tipo de Renda</label>
-              <select
-                id="edit-type"
-                name="type"
-                required
-                defaultValue={incomeToEdit.type}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="SALARY">Salário</option>
-                <option value="FOOD_VOUCHER">Vale Alimentação / Refeição</option>
-                <option value="BENEFIT">Outro Benefício</option>
-                <option value="INVESTMENT">Investimento / Rendimento</option>
-                <option value="OTHER">Outros</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl border border-border">
-              <input
-                type="checkbox"
-                id="edit-isSharedPool"
-                name="isSharedPool"
-                value="true"
-                defaultChecked={incomeToEdit.isSharedPool}
-                className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-              />
-              <label htmlFor="edit-isSharedPool" className="text-sm cursor-pointer select-none">
-                <span className="font-medium block">Entra para divisão das contas?</span>
-                <span className="text-muted-foreground text-xs">Desmarque se for uma renda exclusiva sua.</span>
-              </label>
-            </div>
-
-            <SubmitButton
-              loadingText="Salvando..."
-              className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
-            >
-              Salvar Alterações
-            </SubmitButton>
+            <IncomeForm 
+              initialData={incomeToEdit}
+              actionLabel="Salvar Alterações"
+              loadingLabel="Salvando..."
+            />
           </form>
         </Modal>
       )}

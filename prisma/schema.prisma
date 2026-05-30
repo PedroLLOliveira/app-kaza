@@ -49,6 +49,8 @@ model Income {
   isSharedPool Boolean @default(false)
   userId       String
   user         User    @relation(fields: [userId], references: [id])
+  debtorName   String?
+  destination  String?
 }
 
 model Bill {

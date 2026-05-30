@@ -1,5 +1,5 @@
 import { getBankAccounts, createBankAccount, updateBankAccount, deleteBankAccount } from "@/actions/accounts";
-import { getCreditCards, createCreditCardWithInvoices, payCreditCardInvoice, deleteCreditCard, createSingleCreditCardInvoice, updateCreditCardInvoice, deleteCreditCardInvoice } from "@/actions/creditCards";
+import { getCreditCards, createCreditCardWithInvoices, payCreditCardInvoice, deleteCreditCard, createSingleCreditCardInvoice, updateCreditCardInvoice, deleteCreditCardInvoice, updateCreditCard } from "@/actions/creditCards";
 import { Modal } from "@/components/ui/Modal";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { PlusCircle, Wallet, Pencil, Trash2, CreditCard as CreditCardIcon, CheckCircle, Circle, Plus } from "lucide-react";
@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 export default async function AccountsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ new?: string; edit?: string; newCard?: string; addInvoice?: string; editInvoice?: string }>;
+  searchParams: Promise<{ new?: string; edit?: string; newCard?: string; editCard?: string; addInvoice?: string; editInvoice?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   
@@ -21,6 +21,9 @@ export default async function AccountsPage({
   
   const editId = resolvedSearchParams.edit;
   const accountToEdit = editId ? accounts.find(a => a.id === editId) : null;
+
+  const editCardId = resolvedSearchParams.editCard;
+  const cardToEdit = editCardId ? creditCards.find(c => c.id === editCardId) : null;
 
   const addInvoiceCardId = resolvedSearchParams.addInvoice;
   const cardToAddInvoice = addInvoiceCardId ? creditCards.find(c => c.id === addInvoiceCardId) : null;
@@ -56,6 +59,12 @@ export default async function AccountsPage({
   async function handleCreateCard(formData: FormData) {
     "use server";
     await createCreditCardWithInvoices(formData);
+    redirect("/dashboard/accounts");
+  }
+
+  async function handleUpdateCard(id: string, formData: FormData) {
+    "use server";
+    await updateCreditCard(id, formData);
     redirect("/dashboard/accounts");
   }
 
@@ -172,6 +181,9 @@ export default async function AccountsPage({
                 {/* Header do Cartão */}
                 <div className="p-6 bg-gradient-to-br from-primary/10 to-transparent relative group">
                   <div className="absolute top-4 right-4 flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <Link href={`/dashboard/accounts?editCard=${card.id}`} className="p-2 bg-background/80 hover:bg-background rounded-full text-muted-foreground hover:text-primary transition-colors backdrop-blur-sm">
+                      <Pencil className="w-4 h-4" />
+                    </Link>
                     <form action={handleDeleteCard.bind(null, card.id)}>
                       <button type="submit" className="p-2 bg-background/80 hover:bg-destructive/20 rounded-full text-muted-foreground hover:text-destructive transition-colors backdrop-blur-sm">
                         <Trash2 className="w-4 h-4" />
@@ -394,6 +406,43 @@ export default async function AccountsPage({
               className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
             >
               Criar Cartão e Faturas
+            </SubmitButton>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL DE EDITAR CARTÃO */}
+      {cardToEdit && (
+        <Modal title="Editar Cartão de Crédito" closeHref="/dashboard/accounts">
+          <form action={handleUpdateCard.bind(null, cardToEdit.id)} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="edit-card-name" className="text-sm font-medium">Nome do Cartão</label>
+              <input
+                id="edit-card-name"
+                name="name"
+                type="text"
+                required
+                defaultValue={cardToEdit.name}
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="edit-card-limit" className="text-sm font-medium">Limite Total</label>
+              <input
+                id="edit-card-limit"
+                name="limit"
+                type="number"
+                step="0.01"
+                required
+                defaultValue={cardToEdit.limit}
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+              />
+            </div>
+            <SubmitButton
+              loadingText="Salvando..."
+              className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
+            >
+              Salvar Alterações
             </SubmitButton>
           </form>
         </Modal>

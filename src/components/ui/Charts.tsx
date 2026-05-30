@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface OverviewChartProps {
   paidBillsSalary: number;
@@ -86,3 +86,68 @@ export function OverviewChart({
     </div>
   );
 }
+
+export function MonthlyBarChart({ data }: { data: { id: string, label: string, value: number }[] }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="h-[300px] w-full animate-pulse bg-muted/20 rounded-xl" />;
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center text-muted-foreground border-dashed border-2 border-border rounded-xl">
+        Nenhuma despesa futura programada.
+      </div>
+    );
+  }
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glass-panel p-3 border-border text-sm rounded-xl bg-card border">
+          <p className="font-medium text-foreground">{payload[0].payload.label}</p>
+          <p className="font-bold text-primary">
+            {new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="h-[300px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+          <XAxis 
+            dataKey="label" 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} 
+            dy={10} 
+          />
+          <YAxis 
+            hide
+          />
+          <Tooltip cursor={{ fill: "hsl(var(--muted)/0.3)", radius: 8 }} content={<CustomTooltip />} />
+          <Bar 
+            dataKey="value" 
+            fill="hsl(var(--primary))" 
+            radius={[6, 6, 6, 6]}
+            barSize={32}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+

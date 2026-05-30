@@ -106,6 +106,31 @@ export async function deleteCreditCard(cardId: string) {
   revalidatePath("/dashboard/personal");
 }
 
+export async function updateCreditCard(cardId: string, formData: FormData) {
+  const session = await getSession();
+  if (!session) throw new Error("Não autorizado");
+
+  const name = formData.get("name") as string;
+  const limit = parseFloat(formData.get("limit") as string) || 0;
+
+  if (!name) {
+    throw new Error("O nome do cartão é obrigatório");
+  }
+
+  const card = await prisma.creditCard.findUnique({ where: { id: cardId } });
+  if (!card || card.userId !== session.userId) {
+    throw new Error("Cartão não encontrado ou sem permissão");
+  }
+
+  await prisma.creditCard.update({
+    where: { id: cardId },
+    data: { name, limit },
+  });
+
+  revalidatePath("/dashboard/accounts");
+  revalidatePath("/dashboard/personal");
+}
+
 export async function createSingleCreditCardInvoice(cardId: string, formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Não autorizado");
