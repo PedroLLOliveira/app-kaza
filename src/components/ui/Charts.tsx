@@ -111,7 +111,7 @@ export function MonthlyBarChart({ data }: { data: { id: string, label: string, v
       return (
         <div className="glass-panel p-3 border-border text-sm rounded-xl bg-card border">
           <p className="font-medium text-foreground">{payload[0].payload.label}</p>
-          <p className="font-bold text-primary">
+          <p className="font-bold" style={{ color: "#8b5cf6" }}>
             {new Intl.NumberFormat("pt-BR", {
               style: "currency",
               currency: "BRL",
@@ -141,7 +141,7 @@ export function MonthlyBarChart({ data }: { data: { id: string, label: string, v
           <Tooltip cursor={{ fill: "hsl(var(--muted)/0.3)", radius: 8 }} content={<CustomTooltip />} />
           <Bar 
             dataKey="value" 
-            fill="hsl(var(--primary))" 
+            fill="#8b5cf6" 
             radius={[6, 6, 6, 6]}
             barSize={32}
           />
