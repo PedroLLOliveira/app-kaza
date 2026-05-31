@@ -7,9 +7,13 @@ generator client {
 }
 
 model Household {
-  id                 String             @id @default(uuid())
-  name               String
-  users              User[]
+  id                   String             @id @default(uuid())
+  name                 String
+  inviteCode           String?            @unique @default(uuid())
+  plan                 String             @default("FREE")
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  users                User[]
   bills              Bill[]
   reserves           Reserve[]
   sharedInvestments  SharedInvestment[]
@@ -66,6 +70,8 @@ model Bill {
   household   Household? @relation(fields: [householdId], references: [id])
   userId      String?
   user        User?      @relation("UserIndividualBills", fields: [userId], references: [id])
+  creditCardId String?
+  creditCard   CreditCard? @relation(fields: [creditCardId], references: [id])
 }
 
 model Reserve {
@@ -112,6 +118,7 @@ model CreditCard {
   userId       String
   user         User                @relation(fields: [userId], references: [id])
   invoices     CreditCardInvoice[]
+  bills        Bill[]
 }
 
 model CreditCardInvoice {

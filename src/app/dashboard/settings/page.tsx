@@ -1,5 +1,5 @@
 import { getUserSettings, updateContributionPercentage } from "@/actions/user";
-import { User, Percent, LogOut, Settings } from "lucide-react";
+import { User, Percent, LogOut, Settings, Users, Star } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -36,6 +36,38 @@ export default async function SettingsPage() {
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
               <p className="text-sm text-muted-foreground mb-1">Email</p>
               <p className="font-medium">{user.email}</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="h-px bg-border/50 w-full" />
+
+        {/* Household Section */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-muted-foreground" />
+            Sua Casa
+          </h2>
+          <div className="grid gap-2">
+            <div className="p-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Plano Atual</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-accent">
+                  {user.household?.plan === "PREMIUM" ? "Premium" : "Grátis"}
+                </p>
+                {user.household?.plan === "PREMIUM" && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
+              </div>
+            </div>
+            <div className="p-4 rounded-xl bg-muted/50 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Código de Convite</p>
+              <div className="flex flex-col gap-2 mt-2">
+                <code className="font-mono text-sm break-all bg-background p-3 rounded-lg border border-border select-all text-primary font-bold">
+                  {user.household?.inviteCode}
+                </code>
+                <p className="text-xs text-muted-foreground">
+                  Envie este código para seus familiares inserirem no cadastro e se unirem à sua casa.
+                </p>
+              </div>
             </div>
           </div>
         </section>

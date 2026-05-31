@@ -139,7 +139,11 @@ export async function getPersonalBreakdown(userId: string) {
 
 export async function getPersonalMonthlyExpenses(userId: string) {
   const bills = await prisma.bill.findMany({
-    where: { scope: "INDIVIDUAL", userId },
+    where: { 
+      scope: "INDIVIDUAL", 
+      userId,
+      paymentSource: { not: "CREDIT_CARD" }
+    },
     select: { amount: true, dueDate: true }
   });
 

@@ -28,6 +28,6 @@ export async function getUserSettings() {
 
   return await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { name: true, email: true, contributionPercentage: true },
+    select: { name: true, email: true, contributionPercentage: true, household: { select: { inviteCode: true, plan: true } } },
   });
 }

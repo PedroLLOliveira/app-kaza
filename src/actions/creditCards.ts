@@ -3,10 +3,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
+import { checkCreditCardLimit } from "@/lib/limits";
 
 export async function createCreditCardWithInvoices(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Não autorizado");
+
+  await checkCreditCardLimit(session.userId);
 
   const name = formData.get("name") as string;
   const limit = parseFloat(formData.get("limit") as string) || 0;

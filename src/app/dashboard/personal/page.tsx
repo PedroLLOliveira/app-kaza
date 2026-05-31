@@ -1,7 +1,7 @@
 import { getIncomes, createIncome, updateIncome, deleteIncome } from "@/actions/incomes";
 import { getPersonalBills, createBill, toggleBillStatus, updateBill, deleteBill } from "@/actions/bills";
-import { getCurrentMonthInvoices, payCreditCardInvoice } from "@/actions/creditCards";
 import { getPersonalBreakdown, getPersonalMonthlyExpenses } from "@/services/calculations";
+import { getCreditCards } from "@/actions/creditCards";
 import { getSession } from "@/actions/auth";
 import { Modal } from "@/components/ui/Modal";
 import { OverviewChart, MonthlyBarChart } from "@/components/ui/Charts";
@@ -10,6 +10,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { IncomeForm } from "@/components/forms/IncomeForm";
+import { BillForm } from "@/components/forms/BillForm";
+import { getCurrentMonthInvoices, payCreditCardInvoice } from "@/actions/creditCards";
 
 export default async function PersonalPage({
   searchParams,
@@ -21,6 +23,7 @@ export default async function PersonalPage({
   const incomes = await getIncomes();
   const bills = await getPersonalBills();
   const currentInvoices = await getCurrentMonthInvoices();
+  const creditCards = await getCreditCards();
   const monthlyExpenses = session ? await getPersonalMonthlyExpenses(session.userId) : [];
   
   const showNewIncomeModal = resolvedSearchParams.newIncome === "true";
@@ -368,78 +371,11 @@ export default async function PersonalPage({
       {showNewBillModal && (
         <Modal title="Nova Despesa Pessoal" closeHref="/dashboard/personal">
           <form action={handleCreateBill} className="space-y-4">
-            <input type="hidden" name="scope" value="INDIVIDUAL" />
-            
-            <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">Nome da Conta</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                required
-                placeholder="Ex: Assinatura Spotify, Academia..."
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="amount" className="text-sm font-medium">Valor</label>
-                <input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="0.00"
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="dueDate" className="text-sm font-medium">Vencimento</label>
-                <input
-                  id="dueDate"
-                  name="dueDate"
-                  type="date"
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium">Tipo</label>
-              <select
-                id="type"
-                name="type"
-                required
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="FIXED">Fixa (Mensal)</option>
-                <option value="EMERGENCY">Emergencial / Avulsa</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="paymentSource" className="text-sm font-medium">Fonte de Pagamento</label>
-              <select
-                id="paymentSource"
-                name="paymentSource"
-                required
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="SALARY">Carteira / Salário</option>
-                <option value="FOOD_VOUCHER">Vale Alimentação</option>
-              </select>
-            </div>
-
-            <SubmitButton
-              loadingText="Lançando..."
-              className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
-            >
-              Lançar Conta Pessoal
-            </SubmitButton>
+            <BillForm
+              creditCards={creditCards}
+              actionLabel="Lançar Conta Pessoal"
+              loadingLabel="Lançando..."
+            />
           </form>
         </Modal>
       )}
@@ -448,79 +384,12 @@ export default async function PersonalPage({
       {billToEdit && (
         <Modal title="Editar Despesa Pessoal" closeHref="/dashboard/personal">
           <form action={handleUpdateBill.bind(null, billToEdit.id)} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="edit-bill-title" className="text-sm font-medium">Nome da Conta</label>
-              <input
-                id="edit-bill-title"
-                name="title"
-                type="text"
-                required
-                defaultValue={billToEdit.title}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="edit-bill-amount" className="text-sm font-medium">Valor</label>
-                <input
-                  id="edit-bill-amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  required
-                  defaultValue={billToEdit.amount}
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="edit-bill-dueDate" className="text-sm font-medium">Vencimento</label>
-                <input
-                  id="edit-bill-dueDate"
-                  name="dueDate"
-                  type="date"
-                  required
-                  defaultValue={billToEdit.dueDate.toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="edit-bill-type" className="text-sm font-medium">Tipo</label>
-              <select
-                id="edit-bill-type"
-                name="type"
-                required
-                defaultValue={billToEdit.type}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="FIXED">Fixa (Mensal)</option>
-                <option value="EMERGENCY">Emergencial / Avulsa</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="edit-bill-paymentSource" className="text-sm font-medium">Fonte de Pagamento</label>
-              <select
-                id="edit-bill-paymentSource"
-                name="paymentSource"
-                required
-                defaultValue={(billToEdit as any).paymentSource || "SALARY"}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="SALARY">Carteira / Salário</option>
-                <option value="FOOD_VOUCHER">Vale Alimentação</option>
-              </select>
-            </div>
-
-            <SubmitButton
-              loadingText="Salvando..."
-              className="w-full py-3 mt-4 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/25"
-            >
-              Salvar Alterações
-            </SubmitButton>
+            <BillForm
+              initialData={billToEdit}
+              creditCards={creditCards}
+              actionLabel="Salvar Alterações"
+              loadingLabel="Salvando..."
+            />
           </form>
         </Modal>
       )}

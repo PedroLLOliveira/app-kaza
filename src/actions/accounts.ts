@@ -3,10 +3,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
+import { checkBankAccountLimit } from "@/lib/limits";
 
 export async function createBankAccount(formData: FormData) {
   const session = await getSession();
   if (!session) throw new Error("Não autorizado");
+
+  await checkBankAccountLimit(session.userId);
 
   const name = formData.get("name") as string;
   const balance = parseFloat(formData.get("balance") as string) || 0;

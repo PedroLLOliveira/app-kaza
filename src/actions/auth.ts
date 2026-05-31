@@ -5,18 +5,32 @@ import { SignJWT } from "jose";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 const secretKey = new TextEncoder().encode(
   process.env.JWT_SECRET || "fallback-secret-key-for-dev"
 );
 
-export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1)
+});
 
-  if (!email || !password) {
+const registerSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+  inviteCode: z.string().optional()
+});
+
+export async function loginAction(formData: FormData) {
+  const parsed = loginSchema.safeParse(Object.fromEntries(formData));
+  
+  if (!parsed.success) {
     redirect("/login?error=missing_fields");
   }
+
+  const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -56,13 +70,13 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function registerAction(formData: FormData) {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const parsed = registerSchema.safeParse(Object.fromEntries(formData));
 
-  if (!name || !email || !password) {
+  if (!parsed.success) {
     redirect("/register?error=missing_fields");
   }
+
+  const { name, email, password, inviteCode } = parsed.data;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -73,26 +87,54 @@ export async function registerAction(formData: FormData) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  let targetHouseholdId: string;
 
-  // Cria a Casa "My House" e o Usuário de uma vez só usando o Prisma
-  const house = await prisma.household.create({
-    data: {
-      name: "My House",
-      users: {
-        create: {
-          name,
-          email,
-          password: hashedPassword,
-          contributionPercentage: 50, // Padrão
+  if (inviteCode && inviteCode.trim() !== "") {
+    const household = await prisma.household.findUnique({
+      where: { inviteCode }
+    });
+
+    if (!household) {
+      redirect("/register?error=invalid_invite_code");
+    }
+
+    const { checkHouseholdUserLimit } = await import("@/lib/limits");
+    try {
+      await checkHouseholdUserLimit(household.id);
+    } catch (e: any) {
+      redirect(`/register?error=${encodeURIComponent(e.message)}`);
+    }
+
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        householdId: household.id,
+        contributionPercentage: 50,
+      }
+    });
+    
+    targetHouseholdId = household.id;
+  } else {
+    // Cria a Casa "My House" e o Usuário de uma vez só usando o Prisma
+    const house = await prisma.household.create({
+      data: {
+        name: "My House",
+        users: {
+          create: {
+            name,
+            email,
+            password: hashedPassword,
+            contributionPercentage: 50,
+          }
         }
       }
-    },
-    include: {
-      users: true
-    }
-  });
+    });
+    targetHouseholdId = house.id;
+  }
 
-  const newUser = house.users[0];
+  const newUser = await prisma.user.findUniqueOrThrow({ where: { email } });
 
   const token = await new SignJWT({ 
     email: newUser.email, 

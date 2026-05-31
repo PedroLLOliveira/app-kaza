@@ -1,21 +1,28 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { requireAuth, verifyOwnership } from "@/lib/permissions";
+
+const incomeSchema = z.object({
+  name: z.string().min(1),
+  amount: z.coerce.number().positive(),
+  type: z.string().min(1),
+  isSharedPool: z.coerce.boolean().default(false),
+  debtorName: z.string().optional().nullable(),
+  destination: z.string().optional().nullable()
+});
 
 export async function createIncome(formData: FormData) {
-  const session = await getSession();
-  if (!session) throw new Error("Não autorizado");
+  const session = await requireAuth();
 
-  const name = formData.get("name") as string;
-  const amount = parseFloat(formData.get("amount") as string);
-  const type = formData.get("type") as string;
-  const isSharedPool = formData.get("isSharedPool") === "true";
-  const debtorName = formData.get("debtorName") as string | null;
-  const destination = formData.get("destination") as string | null;
+  const parsed = incomeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    throw new Error("Preencha todos os campos corretamente");
+  }
 
-  if (!name || isNaN(amount) || !type) throw new Error("Preencha todos os campos corretamente");
+  const { name, amount, type, isSharedPool, debtorName, destination } = parsed.data;
 
   await prisma.income.create({
     data: {
@@ -33,8 +40,7 @@ export async function createIncome(formData: FormData) {
 }
 
 export async function getIncomes() {
-  const session = await getSession();
-  if (!session) return [];
+  const session = await requireAuth();
 
   return await prisma.income.findMany({
     where: { userId: session.userId },
@@ -43,25 +49,19 @@ export async function getIncomes() {
 }
 
 export async function updateIncome(id: string, formData: FormData) {
-  const session = await getSession();
-  if (!session) throw new Error("Não autorizado");
+  const session = await requireAuth();
 
-  const name = formData.get("name") as string;
-  const amount = parseFloat(formData.get("amount") as string);
-  const type = formData.get("type") as string;
-  const isSharedPool = formData.get("isSharedPool") === "true";
-  const debtorName = formData.get("debtorName") as string | null;
-  const destination = formData.get("destination") as string | null;
-
-  if (!name || isNaN(amount) || !type) {
+  const parsed = incomeSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
     throw new Error("Preencha todos os campos corretamente");
   }
 
-  // Ensure user owns this income
+  const { name, amount, type, isSharedPool, debtorName, destination } = parsed.data;
+
   const income = await prisma.income.findUnique({ where: { id } });
-  if (!income || income.userId !== session.userId) {
-    throw new Error("Renda não encontrada ou sem permissão");
-  }
+  if (!income) throw new Error("Renda não encontrada");
+  
+  verifyOwnership(income.userId, session.userId);
 
   await prisma.income.update({
     where: { id },
@@ -80,14 +80,12 @@ export async function updateIncome(id: string, formData: FormData) {
 }
 
 export async function deleteIncome(id: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Não autorizado");
+  const session = await requireAuth();
 
-  // Ensure user owns this income
   const income = await prisma.income.findUnique({ where: { id } });
-  if (!income || income.userId !== session.userId) {
-    throw new Error("Renda não encontrada ou sem permissão");
-  }
+  if (!income) throw new Error("Renda não encontrada");
+  
+  verifyOwnership(income.userId, session.userId);
 
   await prisma.income.delete({
     where: { id },
