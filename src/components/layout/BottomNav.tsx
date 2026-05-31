@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, CreditCard, Settings } from "lucide-react";
+import { Home, User, CreditCard, Settings, Clock } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -13,6 +13,7 @@ function cn(...inputs: ClassValue[]) {
 const navItems = [
   { href: "/dashboard/house", label: "Casa", icon: Home },
   { href: "/dashboard/personal", label: "Pessoal", icon: User },
+  { href: "/dashboard/timeline", label: "Extrato", icon: Clock },
   { href: "/dashboard/accounts", label: "Contas", icon: CreditCard },
   { href: "/dashboard/settings", label: "Ajustes", icon: Settings },
 ];

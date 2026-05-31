@@ -1,4 +1,5 @@
-import { calculateHouseBalance, calculateHouseIncome } from "@/services/calculations";
+import { calculateHouseBalance, calculateHouseIncome, getExpensesByCategory } from "@/services/calculations";
+import { getReserves } from "@/actions/reserves";
 import { getHouseholdBills, createBill, toggleBillStatus, updateBill, deleteBill } from "@/actions/bills";
 import { getSession } from "@/actions/auth";
 import { Home, TrendingUp, AlertCircle, PlusCircle, Receipt, CheckCircle, Circle, PieChart as PieChartIcon, Pencil, Trash2, PiggyBank } from "lucide-react";
@@ -6,6 +7,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { OverviewChart } from "@/components/ui/Charts";
+import { CategoryChart } from "@/components/ui/CategoryChart";
+import { GoalsList } from "@/components/ui/GoalsList";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function HousePage({
@@ -19,6 +22,8 @@ export default async function HousePage({
     ? await calculateHouseBalance(session.householdId) 
     : { salaryIncome: 0, foodVoucherIncome: 0, salaryBalance: 0, foodVoucherBalance: 0, paidBillsSalary: 0, paidBillsFood: 0 };
   const bills = await getHouseholdBills();
+  const categoryData = session ? await getExpensesByCategory("HOUSEHOLD", session.householdId) : [];
+  const goals = await getReserves("HOUSEHOLD");
   
   const showNewModal = resolvedSearchParams.new === "true";
   const editId = resolvedSearchParams.edit;
@@ -119,6 +124,14 @@ export default async function HousePage({
         </div>
       </div>
 
+      <div className="glass-panel p-6 rounded-3xl mb-8 relative">
+        <div className="flex items-center gap-2 mb-4">
+          <PieChartIcon className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Gastos por Categoria</h2>
+        </div>
+        <CategoryChart data={categoryData} />
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold mb-4">Contas da Casa</h2>
         <div className="grid gap-3">
@@ -168,6 +181,10 @@ export default async function HousePage({
         </div>
       </div>
 
+      <div className="mt-12 mb-12">
+        <GoalsList goals={goals} scope="HOUSEHOLD" />
+      </div>
+
       {showNewModal && (
         <Modal title="Nova Despesa da Casa" closeHref="/dashboard/house">
           <form action={handleCreate} className="space-y-4">
@@ -211,17 +228,37 @@ export default async function HousePage({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="type" className="text-sm font-medium">Tipo</label>
-              <select
-                id="type"
-                name="type"
-                required
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="FIXED">Fixa (Mensal)</option>
-                <option value="EMERGENCY">Emergencial / Avulsa</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="type" className="text-sm font-medium">Frequência</label>
+                <select
+                  id="type"
+                  name="type"
+                  required
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                >
+                  <option value="FIXED">Fixa (Mensal)</option>
+                  <option value="EMERGENCY">Avulsa</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="category" className="text-sm font-medium">Categoria</label>
+                <select
+                  id="category"
+                  name="category"
+                  required
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                >
+                  <option value="ALIMENTACAO">Alimentação</option>
+                  <option value="TRANSPORTE">Transporte</option>
+                  <option value="MORADIA">Moradia</option>
+                  <option value="LAZER">Lazer</option>
+                  <option value="SAUDE">Saúde</option>
+                  <option value="EDUCACAO">Educação</option>
+                  <option value="OUTROS">Outros</option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -290,18 +327,39 @@ export default async function HousePage({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="edit-type" className="text-sm font-medium">Tipo</label>
-              <select
-                id="edit-type"
-                name="type"
-                required
-                defaultValue={billToEdit.type}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-              >
-                <option value="FIXED">Fixa (Mensal)</option>
-                <option value="EMERGENCY">Emergencial / Avulsa</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="edit-type" className="text-sm font-medium">Frequência</label>
+                <select
+                  id="edit-type"
+                  name="type"
+                  required
+                  defaultValue={billToEdit.type}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                >
+                  <option value="FIXED">Fixa (Mensal)</option>
+                  <option value="EMERGENCY">Avulsa</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="edit-category" className="text-sm font-medium">Categoria</label>
+                <select
+                  id="edit-category"
+                  name="category"
+                  required
+                  defaultValue={(billToEdit as any).category || "OUTROS"}
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                >
+                  <option value="ALIMENTACAO">Alimentação</option>
+                  <option value="TRANSPORTE">Transporte</option>
+                  <option value="MORADIA">Moradia</option>
+                  <option value="LAZER">Lazer</option>
+                  <option value="SAUDE">Saúde</option>
+                  <option value="EDUCACAO">Educação</option>
+                  <option value="OUTROS">Outros</option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">

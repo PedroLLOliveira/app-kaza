@@ -14,7 +14,8 @@ const billSchema = z.object({
   dueDate: z.string().min(1),
   paymentSource: z.string().default("SALARY"),
   creditCardId: z.string().optional().nullable(),
-  invoiceMonth: z.string().optional().nullable()
+  invoiceMonth: z.string().optional().nullable(),
+  category: z.string().default("OUTROS")
 });
 
 export async function createBill(formData: FormData) {
@@ -25,7 +26,7 @@ export async function createBill(formData: FormData) {
     throw new Error("Preencha todos os campos corretamente");
   }
 
-  const { title, amount, type, scope, dueDate: dueDateStr, paymentSource, creditCardId, invoiceMonth } = parsed.data;
+  const { title, amount, type, scope, dueDate: dueDateStr, paymentSource, creditCardId, invoiceMonth, category } = parsed.data;
 
   verifyScopeAccess(scope, session.userId, session.householdId, session.userId, session.householdId);
 
@@ -48,6 +49,7 @@ export async function createBill(formData: FormData) {
       creditCardId: paymentSource === "CREDIT_CARD" ? creditCardId : null,
       householdId: scope === "HOUSEHOLD" ? session.householdId : null,
       userId: scope === "INDIVIDUAL" ? session.userId : null,
+      category,
     },
   });
 
@@ -112,7 +114,7 @@ export async function updateBill(id: string, formData: FormData) {
     throw new Error("Preencha todos os campos corretamente");
   }
 
-  const { title, amount, type, dueDate: dueDateStr, paymentSource, creditCardId, invoiceMonth } = parsed.data;
+  const { title, amount, type, dueDate: dueDateStr, paymentSource, creditCardId, invoiceMonth, category } = parsed.data;
 
   let dueDate = new Date(`${dueDateStr}T12:00:00.000Z`);
 
@@ -139,7 +141,8 @@ export async function updateBill(id: string, formData: FormData) {
       type, 
       dueDate, 
       paymentSource,
-      creditCardId: paymentSource === "CREDIT_CARD" ? creditCardId : null
+      creditCardId: paymentSource === "CREDIT_CARD" ? creditCardId : null,
+      category
     },
   });
 

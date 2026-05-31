@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, CreditCard, Settings, LogOut } from "lucide-react";
+import { Home, User, CreditCard, Settings, LogOut, Clock } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { logoutAction } from "@/actions/auth";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,6 +15,7 @@ function cn(...inputs: ClassValue[]) {
 const navItems = [
   { href: "/dashboard/house", label: "Casa", icon: Home },
   { href: "/dashboard/personal", label: "Pessoal", icon: User },
+  { href: "/dashboard/timeline", label: "Extrato", icon: Clock },
   { href: "/dashboard/accounts", label: "Contas", icon: CreditCard },
   { href: "/dashboard/settings", label: "Ajustes", icon: Settings },
 ];
@@ -24,12 +26,15 @@ export function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen border-r border-border glass-panel fixed left-0 top-0 z-40 bg-background/80">
       <div className="p-6">
-        <h2 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Home className="w-5 h-5 text-primary" />
-          </div>
-          Kaza
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Home className="w-5 h-5 text-primary" />
+            </div>
+            Kaza
+          </h2>
+          <NotificationBell />
+        </div>
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-2">

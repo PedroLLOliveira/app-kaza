@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { cache } from "react";
 
-export async function calculateHouseIncome(householdId: string) {
+export const calculateHouseIncome = cache(async function calculateHouseIncome(householdId: string) {
   const users = await prisma.user.findMany({
     where: { householdId },
     include: {
@@ -26,9 +27,9 @@ export async function calculateHouseIncome(householdId: string) {
   }
 
   return { salary: totalSalary, foodVoucher: totalFoodVoucher };
-}
+});
 
-export async function calculatePersonalIncome(userId: string) {
+export const calculatePersonalIncome = cache(async function calculatePersonalIncome(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { incomes: true },
@@ -62,9 +63,9 @@ export async function calculatePersonalIncome(userId: string) {
   }
 
   return { salary, foodVoucher };
-}
+});
 
-export async function calculateHouseBalance(householdId: string) {
+export const calculateHouseBalance = cache(async function calculateHouseBalance(householdId: string) {
   const incomes = await calculateHouseIncome(householdId);
   
   const paidBillsSalaryAgg = await prisma.bill.aggregate({
@@ -88,9 +89,9 @@ export async function calculateHouseBalance(householdId: string) {
     paidBillsSalary,
     paidBillsFood
   };
-}
+});
 
-export async function getPersonalBreakdown(userId: string) {
+export const getPersonalBreakdown = cache(async function getPersonalBreakdown(userId: string) {
   const incomes = await calculatePersonalIncome(userId);
   
   const paidBillsSalaryAgg = await prisma.bill.aggregate({
@@ -135,9 +136,9 @@ export async function getPersonalBreakdown(userId: string) {
     salaryBalance,
     foodVoucherBalance
   };
-}
+});
 
-export async function getPersonalMonthlyExpenses(userId: string) {
+export const getPersonalMonthlyExpenses = cache(async function getPersonalMonthlyExpenses(userId: string) {
   const bills = await prisma.bill.findMany({
     where: { 
       scope: "INDIVIDUAL", 
@@ -182,4 +183,33 @@ export async function getPersonalMonthlyExpenses(userId: string) {
       value: monthlyData[key]
     };
   });
-}
+});
+
+export const getExpensesByCategory = cache(async function getExpensesByCategory(scope: "HOUSEHOLD" | "INDIVIDUAL", targetId: string) {
+  const whereClause = scope === "HOUSEHOLD" 
+    ? { scope: "HOUSEHOLD", householdId: targetId } 
+    : { scope: "INDIVIDUAL", userId: targetId };
+
+  const bills = await prisma.bill.findMany({
+    where: whereClause,
+    select: { amount: true, category: true }
+  });
+
+  const categoryMap: Record<string, number> = {};
+
+  for (const bill of bills) {
+    const cat = bill.category || "OUTROS";
+    if (!categoryMap[cat]) categoryMap[cat] = 0;
+    categoryMap[cat] += bill.amount;
+  }
+
+  // Also include Credit Card Invoices if individual? 
+  // Wait, Credit Card invoices don't have categories, only the underlying bills have them.
+  // Actually, credit card bills are already in the `bills` array since they have paymentSource="CREDIT_CARD",
+  // so their amount and category are captured here!
+
+  return Object.keys(categoryMap).map(category => ({
+    category,
+    amount: categoryMap[category]
+  })).sort((a, b) => b.amount - a.amount);
+});

@@ -12,6 +12,7 @@ interface BillFormProps {
     dueDate: Date;
     paymentSource: string;
     creditCardId?: string | null;
+    category?: string;
   };
   creditCards: { id: string; name: string }[];
   actionLabel: string;
@@ -68,18 +69,39 @@ export function BillForm({ initialData, creditCards, actionLabel, loadingLabel }
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="type" className="text-sm font-medium">Tipo</label>
-        <select
-          id="type"
-          name="type"
-          required
-          defaultValue={initialData?.type || "FIXED"}
-          className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none appearance-none"
-        >
-          <option value="FIXED">Fixa (Mensal)</option>
-          <option value="EMERGENCY">Emergencial / Avulsa</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="type" className="text-sm font-medium">Frequência</label>
+          <select
+            id="type"
+            name="type"
+            required
+            defaultValue={initialData?.type || "FIXED"}
+            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none appearance-none"
+          >
+            <option value="FIXED">Fixa (Mensal)</option>
+            <option value="EMERGENCY">Emergencial / Avulsa</option>
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="category" className="text-sm font-medium">Categoria</label>
+          <select
+            id="category"
+            name="category"
+            required
+            defaultValue={initialData?.category || "OUTROS"}
+            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none appearance-none"
+          >
+            <option value="ALIMENTACAO">Alimentação</option>
+            <option value="TRANSPORTE">Transporte</option>
+            <option value="MORADIA">Moradia</option>
+            <option value="LAZER">Lazer</option>
+            <option value="SAUDE">Saúde</option>
+            <option value="EDUCACAO">Educação</option>
+            <option value="OUTROS">Outros</option>
+          </select>
+        </div>
       </div>
 
       <div className="space-y-2">

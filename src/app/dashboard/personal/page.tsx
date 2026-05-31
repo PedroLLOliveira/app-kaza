@@ -1,10 +1,13 @@
 import { getIncomes, createIncome, updateIncome, deleteIncome } from "@/actions/incomes";
 import { getPersonalBills, createBill, toggleBillStatus, updateBill, deleteBill } from "@/actions/bills";
-import { getPersonalBreakdown, getPersonalMonthlyExpenses } from "@/services/calculations";
+import { getPersonalBreakdown, getPersonalMonthlyExpenses, getExpensesByCategory } from "@/services/calculations";
+import { getReserves } from "@/actions/reserves";
 import { getCreditCards } from "@/actions/creditCards";
 import { getSession } from "@/actions/auth";
 import { Modal } from "@/components/ui/Modal";
 import { OverviewChart, MonthlyBarChart } from "@/components/ui/Charts";
+import { CategoryChart } from "@/components/ui/CategoryChart";
+import { GoalsList } from "@/components/ui/GoalsList";
 import { PlusCircle, DollarSign, PiggyBank, Briefcase, Receipt, CheckCircle, Circle, AlertCircle, PieChart as PieChartIcon, Pencil, Trash2, CreditCard, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -24,7 +27,9 @@ export default async function PersonalPage({
   const bills = await getPersonalBills();
   const currentInvoices = await getCurrentMonthInvoices();
   const creditCards = await getCreditCards();
+  const categoryData = session ? await getExpensesByCategory("INDIVIDUAL", session.userId) : [];
   const monthlyExpenses = session ? await getPersonalMonthlyExpenses(session.userId) : [];
+  const goals = await getReserves("INDIVIDUAL");
   
   const showNewIncomeModal = resolvedSearchParams.newIncome === "true";
   const showNewBillModal = resolvedSearchParams.newBill === "true";
@@ -191,6 +196,14 @@ export default async function PersonalPage({
         <MonthlyBarChart data={monthlyExpenses} />
       </div>
 
+      <div className="glass-panel p-6 rounded-3xl mb-8 relative">
+        <div className="flex items-center gap-2 mb-4">
+          <PieChartIcon className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Gastos por Categoria (Pessoal)</h2>
+        </div>
+        <CategoryChart data={categoryData} />
+      </div>
+
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Lado das Despesas */}
         <div>
@@ -340,6 +353,10 @@ export default async function PersonalPage({
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-12">
+        <GoalsList goals={goals} scope="INDIVIDUAL" />
       </div>
 
       {/* MODAL DE NOVA RENDA */}

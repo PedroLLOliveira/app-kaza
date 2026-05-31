@@ -18,6 +18,7 @@ model Household {
   reserves           Reserve[]
   sharedInvestments  SharedInvestment[]
   transactions       Transaction[]
+  notifications      Notification[]
 }
 
 model User {
@@ -34,6 +35,7 @@ model User {
   transactions           Transaction[] @relation("UserTransactions")
   individualReserves     Reserve[]     @relation("UserIndividualReserves")
   creditCards            CreditCard[]
+  notifications          Notification[]
 }
 
 model BankAccount {
@@ -55,6 +57,7 @@ model Income {
   user         User    @relation(fields: [userId], references: [id])
   debtorName   String?
   destination  String?
+  @@index([userId])
 }
 
 model Bill {
@@ -72,6 +75,10 @@ model Bill {
   user        User?      @relation("UserIndividualBills", fields: [userId], references: [id])
   creditCardId String?
   creditCard   CreditCard? @relation(fields: [creditCardId], references: [id])
+  category    String     @default("OUTROS")
+  @@index([userId])
+  @@index([householdId])
+  @@index([dueDate])
 }
 
 model Reserve {
@@ -99,6 +106,9 @@ model Transaction {
   household     Household?  @relation(fields: [householdId], references: [id])
   userId        String?
   user          User?       @relation("UserTransactions", fields: [userId], references: [id])
+  category      String      @default("OUTROS")
+  @@index([userId])
+  @@index([householdId])
 }
 
 model SharedInvestment {
@@ -128,4 +138,24 @@ model CreditCardInvoice {
   isPaid       Boolean     @default(false)
   creditCardId String
   creditCard   CreditCard  @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  @@index([creditCardId])
+  @@index([dueDate])
+}
+
+model Notification {
+  id          String     @id @default(uuid())
+  message     String
+  type        String     @default("INFO") // INFO, WARNING, ALERT
+  isRead      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id])
+  
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id])
+
+  @@index([userId])
+  @@index([householdId])
+  @@index([isRead])
 }
