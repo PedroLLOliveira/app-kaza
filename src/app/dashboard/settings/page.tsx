@@ -2,6 +2,7 @@ import { getUserSettings, updateContributionPercentage } from "@/actions/user";
 import { User, Percent, LogOut, Settings, Users, Star } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 
 export default async function SettingsPage() {
   const user = await getUserSettings();
@@ -60,10 +61,15 @@ export default async function SettingsPage() {
             </div>
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
               <p className="text-sm text-muted-foreground mb-1">Código de Convite</p>
-              <div className="flex flex-col gap-2 mt-2">
-                <code className="font-mono text-sm break-all bg-background p-3 rounded-lg border border-border select-all text-primary font-bold">
-                  {user.household?.inviteCode}
-                </code>
+              <div className="flex flex-col gap-3 mt-2">
+                <div className="flex items-center gap-3 bg-muted/80 p-3 rounded-xl border border-border">
+                  <code className="font-mono text-lg flex-1 text-foreground font-semibold break-all select-all">
+                    {user.household?.inviteCode || "Nenhum código"}
+                  </code>
+                  {user.household?.inviteCode && (
+                    <CopyButton textToCopy={user.household.inviteCode} />
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Envie este código para seus familiares inserirem no cadastro e se unirem à sua casa.
                 </p>
